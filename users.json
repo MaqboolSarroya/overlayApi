@@ -1,0 +1,12 @@
+{
+    "admin": {
+        "password": "Admin266$#@",
+        "role": "admin",
+        "can_message": true
+    },
+    "rakm": {
+        "password": "12345",
+        "role": "user",
+        "can_message": true
+    }
+}
