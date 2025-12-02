@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify, render_template_string, redirect, url_for
+from flask_socketio import SocketIO, emit
 import uuid
 import json
 import os
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")  # Enable WebSocket
 latest_message = ""
 users_file = "users.json"
 sessions = {}  # token: username
@@ -54,6 +56,7 @@ def send_message():
     if not users[username].get("can_message", False):
         return jsonify({"error": "You are not allowed to send messages"}), 403
     latest_message = msg
+    socketio.emit("new_message", {"msg": latest_message})
     return jsonify({"status": "ok", "msg": latest_message})
 
 @app.route("/latest", methods=["GET"])
@@ -166,6 +169,7 @@ def toggle_access():
     if username in users and users[username]["role"] != "admin":
         users[username]["can_message"] = not users[username]["can_message"]
         save_users()
+        socketio.emit("access_changed", {"username": username, "can_message": users[username]["can_message"]})
     return redirect(url_for("admin_console"))
 
 @app.route("/delete_user")
@@ -183,4 +187,4 @@ def delete_user():
 # Run Server
 # ==========================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5001, debug=True)
